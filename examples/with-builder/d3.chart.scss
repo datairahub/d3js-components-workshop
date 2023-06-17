@@ -1,0 +1,46 @@
+.chart {
+  /* Wrap div (chart only) */
+  &__wrap {
+    margin: 0;
+    position: relative;
+  }
+
+  /* Axis */
+  &__axis {
+    font-size: 12px;
+    shape-rendering: crispEdges;
+  }
+
+  /* Grid */
+  &__grid {
+    .domain {
+      stroke: none;
+      fill: none;
+    }
+
+    .tick line {
+      opacity: 0.2;
+    }
+  }
+
+  /* Tooltip */
+  &__tooltip {
+    position: absolute;
+    pointer-events: none;
+    display: none;
+    line-height: 1.2;
+    font-size: 12px;
+    max-width: 380px;
+
+    &.active {
+      display: block;
+    }
+
+    > div {
+      background: #2b2b2b;
+      color: white;
+      padding: 4px 6px;
+      border-radius: 3px;
+    }
+  }
+}
