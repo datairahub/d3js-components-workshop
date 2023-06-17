@@ -1,0 +1,255 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.2/d3.min.js" integrity="sha512-oKI0pS1ut+mxQZdqnD3w9fqArLyILRsT3Dx0B+8RVEXzEk3aNK3J3pWlaGJ8MtTs1oiwyXDAH6hG6jy1sY0YqA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<style>
+    body { background: #1a1a1c; }
+    h1, h3, a, .container { text-align: center; font-family: sans-serif; color: white; }
+    .charts {
+        display: flex;
+    }
+</style>
+<body>
+    <a href="./../">menu</a>
+    <h1>2. Varios arcos básicos</h1>
+    <div class="charts">
+        <div class="chart">
+            <h3>Resultados Madrid 2023</h3>
+            <div id="container-mad" class="container"></div>
+        </div>
+        <div class="chart">
+            <h3>Resultados Valencia 2023</h3>
+            <div id="container-val" class="container"></div>
+        </div>
+        <div class="chart">
+            <h3>Resultados Castilla-La Mancha 2023</h3>
+            <div id="container-clm" class="container"></div>
+        </div>
+        <div class="chart">
+            <h3>Resultados Extremadura 2023</h3>
+            <div id="container-ext" class="container"></div>
+        </div>
+    </div>
+    <script>
+        // ------------ MADRID ----------------
+
+        // Datos generales que usaremos
+        const dataMadrid = [
+            {name: "PP", dep: 71, color: '#0055a7'},
+            {name: "VOX", dep: 10, color: '#5ac035'},
+            {name: "PSOE", dep: 27, color: '#ed1c24'},
+            {name: "MM", dep: 27, color: '#4ccc8d'},
+        ];
+
+        // Añadimos el porcentaje a los datos
+        const totalDepMadrid = d3.sum(dataMadrid, (d) => d.dep);
+        const dataWithPercentsMadrid = dataMadrid.map((party, i) => ({
+            ...party,
+            id: i,
+            percent: party.dep / totalDepMadrid,
+            percentRad: (party.dep / totalDepMadrid) * Math.PI,
+        }));
+
+        // Creamos el SVG
+        const svgMadrid = d3.select('#container-mad')
+            .append('svg')
+            .attr('width', '340px')
+            .attr('height', '140px');
+
+        // Función para genera un arco
+        const arcGeneratorMadrid = d3.arc()
+            .innerRadius(75)
+            .outerRadius(100)
+            .startAngle((party, index) => {
+                const previousParties = dataWithPercentsMadrid.filter((d, i) => d.id < index);
+                const start = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + start;
+            })
+            .endAngle((party, index) => {
+                const previousParties = dataWithPercentsMadrid.filter((d, i) => d.id <= index);
+                const end = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + end;
+            });
+
+        // Área principal de dibujo usando los margenes
+        const gMadrid = svgMadrid.append('g')
+            .attr('transform', 'translate(20, 20)')
+
+        // Añadir un arco por cada partido
+        gMadrid.selectAll('.arc')
+            .data(dataWithPercentsMadrid, (d) => d.name)
+            .enter()
+            .append("path")
+            .attr("d", arcGeneratorMadrid)
+            .attr("fill", (d) => d.color)
+            .attr('transform', 'translate(150,100)')
+            .attr("stroke", "#1a1a1c")
+            .attr("stroke-width", 1);
+
+        // ------------ VALENCIA ----------------
+
+        // Datos generales que usaremos
+        const dataValencia = [
+            {name: "PP", dep: 40, color: '#0055a7'},
+            {name: "VOX", dep: 13, color: '#5ac035'},
+            {name: "PSOE", dep: 31, color: '#ed1c24'},
+            {name: "Compromis", dep: 15, color: '#db6426'},
+        ];
+
+        // Añadimos el porcentaje a los datos
+        const totalDepValencia = d3.sum(dataValencia, (d) => d.dep);
+        const dataWithPercentsValencia = dataValencia.map((party, i) => ({
+            ...party,
+            id: i,
+            percent: party.dep / totalDepValencia,
+            percentRad: (party.dep / totalDepValencia) * Math.PI,
+        }));
+
+        // Creamos el SVG
+        const svgValencia = d3.select('#container-val')
+            .append('svg')
+            .attr('width', '340px')
+            .attr('height', '140px');
+
+        // Función para genera un arco
+        const arcGeneratorValencia = d3.arc()
+            .innerRadius(75)
+            .outerRadius(100)
+            .startAngle((party, index) => {
+                const previousParties = dataWithPercentsValencia.filter((d, i) => d.id < index);
+                const start = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + start;
+            })
+            .endAngle((party, index) => {
+                const previousParties = dataWithPercentsValencia.filter((d, i) => d.id <= index);
+                const end = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + end;
+            });
+
+        // Área principal de dibujo usando los margenes
+        const gValencia = svgValencia.append('g')
+            .attr('transform', 'translate(20, 20)')
+
+        // Añadir un arco por cada partido
+        gValencia.selectAll('.arc')
+            .data(dataWithPercentsValencia, (d) => d.name)
+            .enter()
+            .append("path")
+            .attr("d", arcGeneratorValencia)
+            .attr("fill", (d) => d.color)
+            .attr('transform', 'translate(150,100)')
+            .attr("stroke", "#1a1a1c")
+            .attr("stroke-width", 1);
+
+        // ------------ CASTILLA LA MANCHA ----------------
+
+        // Datos generales que usaremos
+        const dataCLM = [
+            {name: "PP", dep: 12, color: '#0055a7'},
+            {name: "VOX", dep: 4, color: '#5ac035'},
+            {name: "PSOE", dep: 17, color: '#ed1c24'},
+        ];
+
+        // Añadimos el porcentaje a los datos
+        const totalDepCLM = d3.sum(dataCLM, (d) => d.dep);
+        const dataWithPercentsCLM = dataCLM.map((party, i) => ({
+            ...party,
+            id: i,
+            percent: party.dep / totalDepCLM,
+            percentRad: (party.dep / totalDepCLM) * Math.PI,
+        }));
+
+        // Creamos el SVG
+        const svgCLM = d3.select('#container-clm')
+            .append('svg')
+            .attr('width', '340px')
+            .attr('height', '140px');
+
+        // Función para genera un arco
+        const arcGeneratorCLM = d3.arc()
+            .innerRadius(75)
+            .outerRadius(100)
+            .startAngle((party, index) => {
+                const previousParties = dataWithPercentsCLM.filter((d, i) => d.id < index);
+                const start = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + start;
+            })
+            .endAngle((party, index) => {
+                const previousParties = dataWithPercentsCLM.filter((d, i) => d.id <= index);
+                const end = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + end;
+            });
+
+        // Área principal de dibujo usando los margenes
+        const gCLM = svgCLM.append('g')
+            .attr('transform', 'translate(20, 20)')
+
+        // Añadir un arco por cada partido
+        gCLM.selectAll('.arc')
+            .data(dataWithPercentsCLM, (d) => d.name)
+            .enter()
+            .append("path")
+            .attr("d", arcGeneratorCLM)
+            .attr("fill", (d) => d.color)
+            .attr('transform', 'translate(150,100)')
+            .attr("stroke", "#1a1a1c")
+            .attr("stroke-width", 1);
+
+        // ------------ EXTREMADURA ----------------
+
+        // Datos generales que usaremos
+        const dataExtremadura = [
+            {name: "PP", dep: 28, color: '#0055a7'},
+            {name: "VOX", dep: 5, color: '#5ac035'},
+            {name: "PODEMOS", dep: 4, color: '#9169f4'},
+            {name: "PSOE", dep: 28, color: '#ed1c24'},
+        ];
+
+        // Añadimos el porcentaje a los datos
+        const totalDepExtremadura = d3.sum(dataExtremadura, (d) => d.dep);
+        const dataWithPercentsExtremadura = dataExtremadura.map((party, i) => ({
+            ...party,
+            id: i,
+            percent: party.dep / totalDepExtremadura,
+            percentRad: (party.dep / totalDepExtremadura) * Math.PI,
+        }));
+
+        // Creamos el SVG
+        const svgExtremadura = d3.select('#container-ext')
+            .append('svg')
+            .attr('width', '340px')
+            .attr('height', '140px');
+
+        // Función para genera un arco
+        const arcGeneratorExtremadura = d3.arc()
+            .innerRadius(75)
+            .outerRadius(100)
+            .startAngle((party, index) => {
+                const previousParties = dataWithPercentsExtremadura.filter((d, i) => d.id < index);
+                const start = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + start;
+            })
+            .endAngle((party, index) => {
+                const previousParties = dataWithPercentsExtremadura.filter((d, i) => d.id <= index);
+                const end = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + end;
+            });
+
+        // Área principal de dibujo usando los margenes
+        const gExtremadura = svgExtremadura.append('g')
+            .attr('transform', 'translate(20, 20)')
+
+        // Añadir un arco por cada partido
+        gExtremadura.selectAll('.arc')
+            .data(dataWithPercentsExtremadura, (d) => d.name)
+            .enter()
+            .append("path")
+            .attr("d", arcGeneratorExtremadura)
+            .attr("fill", (d) => d.color)
+            .attr('transform', 'translate(150,100)')
+            .attr("stroke", "#1a1a1c")
+            .attr("stroke-width", 1);
+    </script>
+</body>

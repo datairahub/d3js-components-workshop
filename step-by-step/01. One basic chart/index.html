@@ -1,0 +1,70 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.2/d3.min.js" integrity="sha512-oKI0pS1ut+mxQZdqnD3w9fqArLyILRsT3Dx0B+8RVEXzEk3aNK3J3pWlaGJ8MtTs1oiwyXDAH6hG6jy1sY0YqA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<style>
+    body { background: #1a1a1c; }
+    h1, h3, a, #container { text-align: center; font-family: sans-serif; color: white; }
+</style>
+<body>
+    <a href="./../">menu</a>
+    <h1>1. Un arco básico</h1>
+    <h3>Resultados Madrid 2023</h3>
+    <div id="container"></div>
+    <script>
+        // Datos generales que usaremos
+        const data = [
+            {name: "PP", dep: 71, color: '#0055a7'},
+            {name: "VOX", dep: 10, color: '#5ac035'},
+            {name: "PSOE", dep: 27, color: '#ed1c24'},
+            {name: "MM", dep: 27, color: '#4ccc8d'},
+        ];
+
+        // Añadimos el porcentaje a los datos
+        const totalDep = d3.sum(data, (d) => d.dep);
+        const dataWithPercents = data.map((party, i) => ({
+            ...party,
+            id: i,
+            percent: party.dep / totalDep,
+            percentRad: (party.dep / totalDep) * Math.PI,
+        }));
+
+        // Creamos el SVG
+        const svg = d3.select('#container')
+            .append('svg')
+            .attr('width', '340px')
+            .attr('height', '140px');
+
+        // Función para genera un arco
+        const arcGenerator = d3.arc()
+            .innerRadius(75)
+            .outerRadius(100)
+            .startAngle((party, index) => {
+                const previousParties = dataWithPercents.filter((d, i) => d.id < index);
+                const start = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + start;
+            })
+            .endAngle((party, index) => {
+                const previousParties = dataWithPercents.filter((d, i) => d.id <= index);
+                const end = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + end;
+            });
+
+        // Área principal de dibujo usando los margenes
+        const g = svg.append('g')
+            .attr('transform', 'translate(20, 20)')
+
+        // Añadir un arco por cada partido
+        g.selectAll('.arc')
+            .data(dataWithPercents, (d) => d.name)
+            .enter()
+            .append("path")
+            .attr("d", arcGenerator)
+            .attr("fill", (d) => d.color)
+            .attr('transform', 'translate(150,100)')
+            .attr("stroke", "#1a1a1c")
+            .attr("stroke-width", 1);
+    </script>
+</body>
