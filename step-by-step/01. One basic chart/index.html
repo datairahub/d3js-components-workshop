@@ -27,7 +27,6 @@
         const dataWithPercents = data.map((party, i) => ({
             ...party,
             id: i,
-            percent: party.dep / totalDep,
             percentRad: (party.dep / totalDep) * Math.PI,
         }));
 

@@ -7,9 +7,7 @@
 <style>
     body { background: #1a1a1c; }
     h1, h3, a, .container { text-align: center; font-family: sans-serif; color: white; }
-    .charts {
-        display: flex;
-    }
+    .charts { display: flex; }
 </style>
 <body>
     <a href="./../">menu</a>
@@ -48,7 +46,6 @@
         const dataWithPercentsMadrid = dataMadrid.map((party, i) => ({
             ...party,
             id: i,
-            percent: party.dep / totalDepMadrid,
             percentRad: (party.dep / totalDepMadrid) * Math.PI,
         }));
 
@@ -103,7 +100,6 @@
         const dataWithPercentsValencia = dataValencia.map((party, i) => ({
             ...party,
             id: i,
-            percent: party.dep / totalDepValencia,
             percentRad: (party.dep / totalDepValencia) * Math.PI,
         }));
 
@@ -157,7 +153,6 @@
         const dataWithPercentsCLM = dataCLM.map((party, i) => ({
             ...party,
             id: i,
-            percent: party.dep / totalDepCLM,
             percentRad: (party.dep / totalDepCLM) * Math.PI,
         }));
 
@@ -212,7 +207,6 @@
         const dataWithPercentsExtremadura = dataExtremadura.map((party, i) => ({
             ...party,
             id: i,
-            percent: party.dep / totalDepExtremadura,
             percentRad: (party.dep / totalDepExtremadura) * Math.PI,
         }));
 

@@ -1,0 +1,230 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.2/d3.min.js" integrity="sha512-oKI0pS1ut+mxQZdqnD3w9fqArLyILRsT3Dx0B+8RVEXzEk3aNK3J3pWlaGJ8MtTs1oiwyXDAH6hG6jy1sY0YqA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<style>
+    body { background: #1a1a1c; }
+    h1, h3, a, .container { text-align: center; font-family: sans-serif; color: white; }
+    .charts { display: flex; }
+</style>
+<body>
+    <a href="./../">menu</a>
+    <h1>5. Varios arcos con función con opciones y diferentes layouts</h1>
+    <div class="charts">
+        <div class="chart">
+            <h3>Resultados Madrid 2023</h3>
+            <div id="container-mad" class="container"></div>
+        </div>
+        <div class="chart">
+            <h3>Resultados Valencia 2023</h3>
+            <div id="container-val" class="container"></div>
+        </div>
+        <div class="chart">
+            <h3>Resultados Castilla-La Mancha 2023</h3>
+            <div id="container-clm" class="container"></div>
+        </div>
+        <div class="chart">
+            <h3>Resultados Extremadura 2023</h3>
+            <div id="container-ext" class="container"></div>
+        </div>
+    </div>
+    <script>
+        /**
+         * Función para crear arcos parlamentarios
+         * @param {string} container: contenedor del gráfico (ej '#mychart')
+         * @param {array} data: datos para crear el gráfico
+         * @param {number} width: ancho del svg
+         * @param {number} height: altura del svg
+         * @param {number} margin: márgenes del gráfico
+         * @param {number} strokeWidth: anchura del borde de cada arco
+         * @param {number} innerRadius: radio interior del arco
+         * @param {number} outerRadius: radio exterior del arco
+         * @param {number} cornerRadius: radio de redondeo de las esquinas de cada arco
+         */
+        function createArcChart(container, data, width, height, margin, strokeWidth, innerRadius, outerRadius, cornerRadius) {
+            // Añadimos el porcentaje a los datos
+            const totalDep = d3.sum(data, (d) => d.dep);
+            const dataWithPercents = data.map((party, i) => ({
+                ...party,
+                id: i,
+                percentRad: (party.dep / totalDep) * Math.PI,
+            }));
+
+            // Creamos el SVG
+            const svg = d3.select(container)
+                .append('svg')
+                .attr('width', `${width + (margin*2)}px`)
+                .attr('height', `${height + (margin*2)}px`);
+
+            // Función para genera un arco
+            const arcGenerator = d3.arc()
+                .innerRadius(innerRadius)
+                .outerRadius(outerRadius)
+                .cornerRadius(cornerRadius)
+                .startAngle((party, index) => {
+                    const previousParties = dataWithPercents.filter((d, i) => d.id < index);
+                    const start = d3.sum(previousParties, (d) => d.percentRad);
+                    return (- Math.PI / 2) + start;
+                })
+                .endAngle((party, index) => {
+                    const previousParties = dataWithPercents.filter((d, i) => d.id <= index);
+                    const end = d3.sum(previousParties, (d) => d.percentRad);
+                    return (- Math.PI / 2) + end;
+                });
+
+            // Área principal de dibujo usando los margenes
+            const g = svg.append('g')
+                .attr('transform', `translate(${margin}, ${margin})`)
+
+            // Añadir un arco por cada partido
+            g.selectAll('.arc')
+                .data(dataWithPercents, (d) => d.name)
+                .enter()
+                .append("path")
+                .attr("d", arcGenerator)
+                .attr("fill", (d) => d.color)
+                .attr('transform', `translate(${width / 2},${height})`)
+                .attr("stroke", "#1a1a1c")
+                .attr("stroke-width", strokeWidth);
+        }
+
+        /**
+         * Función para crear arcos parlamentarios con resultados previos
+         * @param {string} container: contenedor del gráfico (ej '#mychart')
+         * @param {array} data: datos para crear el gráfico
+         * @param {object} config: datos configuración del gráfico:
+         *   {
+         *     width: number,
+         *     height: number,
+         *     margin: number,
+         *     strokeWidth: number,
+         *     innerRadius: number,
+         *     outerRadius: number,
+         *     cornerRadius: number,
+         *     innerRadiusPrev: number,
+         *     outerRadiusPrev: number,
+         *     cornerRadiusPrev: number,
+         *   }
+         */
+        function createArcChartWithPreviousResults(container, data, config) {
+            // 
+            // Añadimos el porcentaje a los datos
+            const totalDep = d3.sum(data, (d) => d.dep);
+            const totalDepPrev = d3.sum(data, (d) => d.prev);
+            const dataWithPercents = data.map((party, i) => ({
+                ...party,
+                id: i,
+                percentRad: (party.dep / totalDep) * Math.PI,
+                percentRadPrev: (party.prev / totalDep) * Math.PI,
+            }));
+
+            // Creamos el SVG
+            const svg = d3.select(container)
+                .append('svg')
+                .attr('width', `${config.width + (config.margin*2)}px`)
+                .attr('height', `${config.height + (config.margin*2)}px`);
+
+            // Función para genera un arco (datos actuales)
+            const arcGenerator = d3.arc()
+                .innerRadius(config.innerRadius)
+                .outerRadius(config.outerRadius)
+                .cornerRadius(config.cornerRadius)
+                .startAngle((party, index) => {
+                    const previousParties = dataWithPercents.filter((d, i) => d.id < index);
+                    const start = d3.sum(previousParties, (d) => d.percentRad);
+                    return (- Math.PI / 2) + start;
+                })
+                .endAngle((party, index) => {
+                    const previousParties = dataWithPercents.filter((d, i) => d.id <= index);
+                    const end = d3.sum(previousParties, (d) => d.percentRad);
+                    return (- Math.PI / 2) + end;
+                });
+
+            // Función para genera un arco (datos previos)
+            const arcGeneratorPrev = d3.arc()
+                .innerRadius(config.innerRadiusPrev)
+                .outerRadius(config.outerRadiusPrev)
+                .cornerRadius(config.cornerRadiusPrev)
+                .startAngle((party, index) => {
+                    const previousParties = dataWithPercents.filter((d, i) => d.id < index);
+                    const start = d3.sum(previousParties, (d) => d.percentRad);
+                    return (- Math.PI / 2) + start;
+                })
+                .endAngle((party, index) => {
+                    const previousParties = dataWithPercents.filter((d, i) => d.id <= index);
+                    const end = d3.sum(previousParties, (d) => d.percentRad);
+                    return (- Math.PI / 2) + end;
+                });
+
+            // Área principal de dibujo usando los margenes
+            const g = svg.append('g')
+                .attr('transform', `translate(${config.margin}, ${config.margin})`)
+
+            // Añadir un arco por cada partido (resultados actuales)
+            g.selectAll('.arc')
+                .data(dataWithPercents, (d) => d.name)
+                .enter()
+                .append("path")
+                .attr("d", arcGenerator)
+                .attr("fill", (d) => d.color)
+                .attr('transform', `translate(${config.width / 2},${config.height})`)
+                .attr("stroke", "#1a1a1c")
+                .attr("stroke-width", config.strokeWidth);
+
+            // Añadir un arco por cada partido (resultados previos)
+            g.selectAll('.arc')
+                .data(dataWithPercents, (d) => d.name)
+                .enter()
+                .append("path")
+                .attr("d", arcGeneratorPrev)
+                .attr("fill", (d) => d.color)
+                .attr('transform', `translate(${config.width / 2},${config.height})`)
+                .attr("stroke", "#1a1a1c")
+                .attr("stroke-width", config.strokeWidth);
+        }
+
+        // Datos generales que usaremos
+        const dataMadrid = [
+            {name: "PP", dep: 71, prev: 65, color: '#0055a7'},
+            {name: "VOX", dep: 10, prev: 13, color: '#5ac035'},
+            {name: "PODEMOS", dep: 0, prev: 10, color: '#9169f4'},
+            {name: "PSOE", dep: 27, prev: 24, color: '#ed1c24'},
+            {name: "MM", dep: 27, prev: 24, color: '#4ccc8d'},
+        ];
+        const dataValencia = [
+            {name: "PP", dep: 40, color: '#0055a7'},
+            {name: "VOX", dep: 13, color: '#5ac035'},
+            {name: "PSOE", dep: 31, color: '#ed1c24'},
+            {name: "Compromis", dep: 15, color: '#db6426'},
+        ];
+        const dataCLM = [
+            {name: "PP", dep: 12, color: '#0055a7'},
+            {name: "VOX", dep: 4, color: '#5ac035'},
+            {name: "PSOE", dep: 17, color: '#ed1c24'},
+        ];
+        const dataExtremadura = [
+            {name: "PP", dep: 28, color: '#0055a7'},
+            {name: "VOX", dep: 5, color: '#5ac035'},
+            {name: "PODEMOS", dep: 4, color: '#9169f4'},
+            {name: "PSOE", dep: 28, color: '#ed1c24'},
+        ];
+
+        createArcChartWithPreviousResults('#container-mad', dataMadrid, {
+           width: 500,
+           height: 240,
+           margin: 20,
+           strokeWidth: 3,
+           innerRadius: 180,
+           outerRadius: 240,
+           cornerRadius: 10,
+           innerRadiusPrev: 100,
+           outerRadiusPrev: 140,
+           cornerRadiusPrev: 10,
+        });
+        createArcChart('#container-val', dataValencia, 300, 100, 20, 1, 75, 100, 0);
+        createArcChart('#container-clm', dataCLM, 300, 100, 20, 1, 75, 100, 0);
+        createArcChart('#container-ext', dataExtremadura, 300, 100, 20, 1, 75, 100, 0);
+    </script>
+</body>
