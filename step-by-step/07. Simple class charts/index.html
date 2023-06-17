@@ -1,0 +1,101 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.2/d3.min.js" integrity="sha512-oKI0pS1ut+mxQZdqnD3w9fqArLyILRsT3Dx0B+8RVEXzEk3aNK3J3pWlaGJ8MtTs1oiwyXDAH6hG6jy1sY0YqA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<style>
+    body { background: #1a1a1c; }
+    h1, h3, a, .container { text-align: center; font-family: sans-serif; color: white; }
+    .charts { display: flex; }
+</style>
+<body>
+    <a href="./../">menu</a>
+    <h1>7. Un arco simple con clases</h1>
+    <div class="charts">
+        <div class="chart">
+            <h3>Madrid</h3>
+            <div id="container-mad" class="container"></div>
+        </div>
+    </div>
+    <script>
+        class ArcChart {
+            // Constructor. Función que se llama cuando hacemos 'new ArcChart(...)''
+            constructor(container, data, config) {
+                const totalDep = d3.sum(data, (d) => d.dep);
+                const dataWithPercents = data.map((party, i) => ({
+                    ...party,
+                    id: i,
+                    percentRad: (party.dep / totalDep) * Math.PI,
+                }));
+
+                // Creamos el SVG
+                const svg = d3.select(container)
+                    .append('svg')
+                    .attr('width', `${config.width + (config.margin*2)}px`)
+                    .attr('height', `${config.height + (config.margin*2)}px`);
+
+                // Función para genera un arco
+                const arcGenerator = this.arcGeneratorGenerator(config.innerRadius, config.outerRadius, config.cornerRadius, dataWithPercents);
+
+                // Área principal de dibujo usando los margenes
+                const g = svg.append('g')
+                    .attr('transform', `translate(${config.margin}, ${config.margin})`)
+
+                // Añadir un arco por cada partido
+                this.drawArcs(g, dataWithPercents, arcGenerator, config.width, config.height, config.strokeWidth);
+            }
+
+            calcStartAngle(dataWithPercents, party, index) {
+                const previousParties = dataWithPercents.filter((d, i) => d.id < index);
+                const start = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + start;
+            }
+
+            calcEndAngle(dataWithPercents, party, index) {
+                const previousParties = dataWithPercents.filter((d, i) => d.id <= index);
+                const end = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + end;
+            }
+
+            arcGeneratorGenerator(innerRadius, outerRadius, cornerRadius, dataWithPercents) {
+                return d3.arc()
+                    .innerRadius(innerRadius)
+                    .outerRadius(outerRadius)
+                    .cornerRadius(cornerRadius)
+                    .startAngle((party, index) => this.calcStartAngle(dataWithPercents, party, index))
+                    .endAngle((party, index) => this.calcEndAngle(dataWithPercents, party, index));
+            }
+
+            drawArcs(g, dataWithPercents, arcGenerator, width, height, strokeWidth) {
+                g.selectAll('.arc')
+                    .data(dataWithPercents, (d) => d.name)
+                    .enter()
+                    .append("path")
+                    .attr("d", arcGenerator)
+                    .attr("fill", (d) => d.color)
+                    .attr('transform', `translate(${width / 2},${height})`)
+                    .attr("stroke", "#1a1a1c")
+                    .attr("stroke-width", strokeWidth);
+            }
+        }
+
+        const dataMadrid = [
+            {name: "PP", dep: 71, prev: 65, color: '#0055a7'},
+            {name: "VOX", dep: 10, prev: 13, color: '#5ac035'},
+            {name: "PODEMOS", dep: 0, prev: 10, color: '#9169f4'},
+            {name: "PSOE", dep: 27, prev: 24, color: '#ed1c24'},
+            {name: "MM", dep: 27, prev: 24, color: '#4ccc8d'},
+        ];
+
+        const chart = new ArcChart('#container-mad', dataMadrid, {
+           width: 500,
+           height: 240,
+           margin: 20,
+           strokeWidth: 3,
+           innerRadius: 180,
+           outerRadius: 240,
+           cornerRadius: 10,
+        });
+    </script>
+</body>

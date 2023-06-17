@@ -1,0 +1,158 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.2/d3.min.js" integrity="sha512-oKI0pS1ut+mxQZdqnD3w9fqArLyILRsT3Dx0B+8RVEXzEk3aNK3J3pWlaGJ8MtTs1oiwyXDAH6hG6jy1sY0YqA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<style>
+    body { background: #1a1a1c; }
+    h1, h3, a, .container { text-align: center; font-family: sans-serif; color: white; }
+    .charts { display: flex; }
+</style>
+<body>
+    <a href="./../">menu</a>
+    <h1>8. Un arco simple con clases y estado</h1>
+    <div class="charts">
+        <div class="chart">
+            <h3>Madrid</h3>
+            <div id="container-mad" class="container"></div>
+        </div>
+        <div class="chart">
+            <h3>Valencia</h3>
+            <div id="container-val" class="container"></div>
+        </div>
+        <div class="chart">
+            <h3>Castilla-La Mancha</h3>
+            <div id="container-clm" class="container"></div>
+        </div>
+        <div class="chart">
+            <h3>Extremadura</h3>
+            <div id="container-ext" class="container"></div>
+        </div>
+    </div>
+    <script>
+        class ArcChart {
+            constructor(container, data, config) {
+                this.container = container;
+                this.config = config;
+
+                const totalDep = d3.sum(data, (d) => d.dep);
+                this.data = data.map((party, i) => ({
+                    ...party,
+                    id: i,
+                    percentRad: (party.dep / totalDep) * Math.PI,
+                }));
+
+                // Creamos el SVG
+                const svg = d3.select(this.container)
+                    .append('svg')
+                    .attr('width', `${this.config.width + (this.config.margin*2)}px`)
+                    .attr('height', `${this.config.height + (this.config.margin*2)}px`);
+
+                // Área principal de dibujo usando los margenes
+                this.g = svg.append('g')
+                    .attr('transform', `translate(${this.config.margin}, ${this.config.margin})`)
+
+                // Añadir un arco por cada partido
+                this.drawArcs();
+            }
+
+            calcStartAngle(party, index) {
+                const previousParties = this.data.filter((d, i) => d.id < index);
+                const start = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + start;
+            }
+
+            calcEndAngle(party, index) {
+                const previousParties = this.data.filter((d, i) => d.id <= index);
+                const end = d3.sum(previousParties, (d) => d.percentRad);
+                return (- Math.PI / 2) + end;
+            }
+
+            arcGeneratorGenerator() {
+                return d3.arc()
+                    .innerRadius(this.config.innerRadius)
+                    .outerRadius(this.config.outerRadius)
+                    .cornerRadius(this.config.cornerRadius)
+                    .startAngle((party, index) => this.calcStartAngle(party, index))
+                    .endAngle((party, index) => this.calcEndAngle(party, index));
+            }
+
+            drawArcs() {
+                this.g.selectAll('.arc')
+                    .data(this.data, (d) => d.name)
+                    .enter()
+                    .append("path")
+                    .attr("d", this.arcGeneratorGenerator())
+                    .attr("fill", (d) => d.color)
+                    .attr('transform', `translate(${this.config.width / 2},${this.config.height})`)
+                    .attr("stroke", "#1a1a1c")
+                    .attr("stroke-width", this.config.strokeWidth);
+            }
+        }
+
+        const dataMadrid = [
+            {name: "PP", dep: 71, prev: 65, color: '#0055a7'},
+            {name: "VOX", dep: 10, prev: 13, color: '#5ac035'},
+            {name: "PODEMOS", dep: 0, prev: 10, color: '#9169f4'},
+            {name: "PSOE", dep: 27, prev: 24, color: '#ed1c24'},
+            {name: "MM", dep: 27, prev: 24, color: '#4ccc8d'},
+        ];
+        const chartMadrid = new ArcChart('#container-mad', dataMadrid, {
+           width: 500,
+           height: 240,
+           margin: 20,
+           strokeWidth: 3,
+           innerRadius: 180,
+           outerRadius: 240,
+           cornerRadius: 10,
+        });
+
+        const dataValencia = [
+            {name: "PP", dep: 40, color: '#0055a7'},
+            {name: "VOX", dep: 13, color: '#5ac035'},
+            {name: "PSOE", dep: 31, color: '#ed1c24'},
+            {name: "Compromis", dep: 15, color: '#db6426'},
+        ];
+        const chartValencia = new ArcChart('#container-val', dataValencia, {
+            width: 300,
+            height: 100,
+            margin: 20,
+            strokeWidth: 1,
+            innerRadius: 75,
+            outerRadius: 100,
+            cornerRadius: 0,
+        });
+
+        const dataCLM = [
+            {name: "PP", dep: 12, color: '#0055a7'},
+            {name: "VOX", dep: 4, color: '#5ac035'},
+            {name: "PSOE", dep: 17, color: '#ed1c24'},
+        ];
+        const chartCLM = new ArcChart('#container-clm', dataCLM, {
+            width: 300,
+            height: 100,
+            margin: 20,
+            strokeWidth: 1,
+            innerRadius: 75,
+            outerRadius: 100,
+            cornerRadius: 0,
+        });
+
+        const dataExtremadura = [
+            {name: "PP", dep: 28, color: '#0055a7'},
+            {name: "VOX", dep: 5, color: '#5ac035'},
+            {name: "PODEMOS", dep: 4, color: '#9169f4'},
+            {name: "PSOE", dep: 28, color: '#ed1c24'},
+        ];
+        const chartExtremadura = new ArcChart('#container-ext', dataExtremadura, {
+            width: 300,
+            height: 100,
+            margin: 20,
+            strokeWidth: 1,
+            innerRadius: 75,
+            outerRadius: 100,
+            cornerRadius: 0,
+        });
+    </script>
+</body>
